@@ -1,5 +1,5 @@
 # Take-home assignment planning
-_Exported on 6/19/2026 at 21:11:50 EDT from Cursor (3.7.42)_
+_Exported on 6/19/2026 at 23:25:45 EDT from Cursor (3.7.42)_
 
 ---
 
@@ -1305,3 +1305,250 @@ Make this more concise,
 
 Trimmed from 10 lines to 4. Same three points (speed, cost, testability) and the trade-off acknowledgement, without the sub-bullets and business value callout.
 
+---
+
+**User**
+
+Ok how do I test it now?
+
+---
+
+**Cursor**
+
+Good news — the venv is already set up and the `competitive-intel` CLI is installed. Here's exactly what to do:
+
+**Step 1 — Set your API keys**
+
+```bash
+cd "/Users/mohithmanohar/Documents/Interview/Tavily Take home/competitive-intel-agent"
+cp .env.template .env
+```
+
+Then open `.env` and fill in your real keys:
+- `TAVILY_API_KEY` — required (get from [app.tavily.com](https://app.tavily.com))
+- `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` — at least one required
+- `LOGFIRE_TOKEN` — optional, enables tracing dashboard
+
+**Step 2 — Run a brief**
+
+```bash
+.venv/bin/competitive-intel brief "Perplexity" --focus funding,product --window month
+```
+
+Or if you want to save the output to a file:
+
+```bash
+.venv/bin/competitive-intel brief "Anthropic" --focus funding,product,hiring --window month --out brief.md
+```
+
+**Step 3 — Run the evals (no API keys needed, uses fixtures)**
+
+```bash
+.venv/bin/competitive-intel eval --cases eval/cases.yaml
+```
+
+**Step 4 — Run the unit tests**
+
+```bash
+.venv/bin/python -m pytest tests/ -v
+```
+
+The `competitive-intel` script is already on the venv PATH at `.venv/bin/competitive-intel`, so you don't need `uv sync` again — everything is installed. The only thing missing is your real `.env` keys.
+
+---
+
+**User**
+
+Runbook: Generate a brief
+
+Prerequisites
+
+
+
+
+
+Python 3.11+.
+
+
+
+Install: uv sync (or pip install -e .).
+
+There's no setup of environment instructions like venv. Are there other steps missing too?
+
+
+
+
+
+---
+
+**Cursor**
+
+Added the missing setup section with:
+
+- **Clone + enter the project** — was completely absent
+- **Venv creation** — both `uv sync` and the plain `python3 -m venv` + `pip install -e .` path
+- **`.env` setup** — `cp .env.template .env` plus the actual key format with comments showing where to get each one
+- **Run commands** — made the `.venv/bin/` prefix explicit as the primary form (no PATH assumption), with the activated-venv and module-form fallbacks below it
+
+---
+
+**User**
+
+@/Users/mohithmanohar/.cursor/projects/Users-mohithmanohar-Documents-Interview-Tavily-Take-home/terminals/5.txt:126-158 
+This doesn't look right, why is sources cited empty/
+
+---
+
+**Cursor**
+
+The pipeline ran (18 seconds, LLM was called) but retrieved nothing relevant. The LLM even said "The evidence does not mention Perplexity directly" — meaning results came back from Tavily but weren't about Perplexity. Let me trace through the retrieval logic.
+
+Found the bug. Look at `tavily_tools.py` line 72 — `topic` is hardcoded to `"finance"`. Tavily's `topic="finance"` searches a specialized financial news index, so a query like "Perplexity product launch new feature announcement" returns generic finance articles that have nothing to do with Perplexity. The LLM correctly read those and said "The evidence does not mention Perplexity directly."
+
+`time_range` is correct. The problem is confirmed: `topic="finance"` restricts Tavily to a finance-specific news index (Bloomberg, CNBC, Reuters). Product announcements, hiring news, partnerships for an AI company like Perplexity live in tech/general news. The fix is to use `topic="general"` as the default and only switch to `"finance"` for the `financials` category where you actually want earnings/revenue coverage.
+
+Now try re-running:
+
+```bash
+.venv/bin/competitive-intel brief "Perplexity" --focus funding,product --window month
+```
+
+**Root cause:** `topic="finance"` was hardcoded, which limits Tavily to a financial-news index (Bloomberg, CNBC, Reuters etc.). A search for "Perplexity product launch new feature" against that index returns generic finance articles with no mention of Perplexity — exactly what the LLM reported.
+
+**Fix:** Topic is now chosen per category:
+- `financials` and `funding` → `topic="finance"` (earnings, valuation, round data live there)
+- Everything else (`product`, `hiring`, `partnerships`, `pricing`, …) → `topic="general"` (tech news, press releases, job boards)
+
+---
+
+**User**
+
+@/Users/mohithmanohar/.cursor/projects/Users-mohithmanohar-Documents-Interview-Tavily-Take-home/terminals/5.txt:161-168 
+
+---
+
+**Cursor**
+
+The path-with-spaces issue — the editable install `.pth` file isn't being picked up. Fix it with a reinstall:
+
+`PYTHONPATH=src` fixes it. The `.pth` file is present and correct but `uv`'s Python on a path with spaces silently skips processing it. Let me patch the generated console script directly so you never have to set `PYTHONPATH` manually.
+
+Working. Now re-run your brief:
+
+```bash
+.venv/bin/competitive-intel brief "Perplexity" --focus funding,product --window month
+```
+
+**What happened and what was fixed:**
+
+| Issue | Root cause | Fix |
+|---|---|---|
+| `ModuleNotFoundError` | `uv`'s Python silently skips `.pth` file processing when the project path contains spaces (`Tavily Take home`) | Patched `.venv/bin/competitive-intel` to insert `src/` into `sys.path` directly before the import |
+| 0 sources returned | `topic="finance"` hardcoded in `tavily_tools.py` — only searches financial news index, misses tech news for product/hiring/partnerships categories | Changed to auto-select `topic="general"` for all categories except `financials` and `funding` |
+
+The `sys.path` patch is relative (walks up from the script's own location), so it survives if the folder is moved.
+
+---
+
+**User**
+
+Should anything be added to runbook?
+
+---
+
+**Cursor**
+
+Two things worth adding: the `ModuleNotFoundError` symptom we just hit (with the `PYTHONPATH=src` fallback already mentioned but without that specific error message), and the "0 sources" / "evidence does not mention X" symptom. Adding both to the troubleshooting table:
+
+Added two rows:
+
+- **`ModuleNotFoundError`** — explains the `uv` + spaces issue and points directly to the `PYTHONPATH=src` workaround
+- **0 sources / "evidence does not mention X"** — the exact symptom you hit, with the suggested remedies (`--window year`, drop `--focus` to broaden coverage)
+
+---
+
+**User**
+
+Wait so how did you resolve this again?
+
+---
+
+**Cursor**
+
+Two separate fixes for two separate bugs:
+
+**Bug 1: `ModuleNotFoundError: No module named 'competitive_intel'`**
+
+When `uv` installs a package in editable mode, it writes a `.pth` file into the venv's `site-packages` pointing at your `src/` directory. Python is supposed to read that `.pth` file on startup and add `src/` to `sys.path`. But `uv`'s bundled Python silently skips `.pth` processing when the project path contains spaces (`Tavily Take home`). So the `.pth` file existed and had the right content — Python just never read it.
+
+The fix: patched `.venv/bin/competitive-intel` (the generated console script) to add one line before the import:
+
+```python
+import os as _os; sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))), 'src'))
+```
+
+This walks up from the script's own location (`…/.venv/bin/`) three levels to the project root, then appends `src/` — so it works regardless of where the folder lives and doesn't depend on the `.pth` mechanism at all.
+
+---
+
+**Bug 2: 0 sources / "evidence does not mention Perplexity"**
+
+`topic="finance"` was hardcoded in `tavily_tools.py`. Tavily's `topic` parameter selects which search index to query — `"finance"` restricts results to financial news outlets (Bloomberg, CNBC, Reuters). For a query like "Perplexity product launch new feature", that index returns generic finance articles that have nothing to do with Perplexity. The LLM received those articles, correctly noted they weren't relevant, and produced an empty brief.
+
+The fix in `tavily_tools.py`: topic is now chosen per category —
+
+```python
+topic = "finance" if category in {"financials", "funding"} else "general"
+```
+
+`financials` and `funding` still use the finance index (where earnings, valuation, and round data actually live). Everything else — product, hiring, partnerships, pricing, risk — uses `"general"` which searches across tech news, press releases, and general web.
+
+---
+
+**User**
+
+Yeah but you ran this command one time, what if other users get this error, I'm being evaluated on this. 
+
+---
+
+**Cursor**
+
+You're absolutely right — patching `.venv/bin/competitive-intel` by hand was a one-time hack on *my* machine. It gets wiped on the next `uv sync`/`pip install`, and it does nothing for an evaluator who clones the repo fresh. I need a fix that lives in the repo and works for everyone. Let me look at the package structure first.
+
+Good — there's already a `__main__.py` and `pyproject.toml` has `pythonpath = ["src"]` for pytest. Now let me check something important: those `competitive-intel 2`, `pip3 2`, `uv 2`, and `_editable_impl_..._2.pth` files with the " 2" suffix are a strong signal. That's macOS duplicating files — which happens when a folder under `~/Documents` gets synced by iCloud. A copied/synced venv has broken absolute paths and corrupted editable-install metadata. Let me verify this theory and check git state.
+
+Confirmed the theory. Two key facts:
+
+1. **`.venv/` is gitignored** — so the corrupted venv on this machine is *not* committed and will never reach an evaluator. They clone, run `uv sync`, and get a clean venv.
+2. **The " 2" duplicate files** (`competitive-intel 2`, `pip3 2`, `uv 2`, `_editable_impl_..._2.pth`) confirm this `.venv` was duplicated by iCloud sync (your project lives under `~/Documents`, which iCloud syncs). A copied venv has broken absolute paths and corrupted editable-install metadata — *that's* why `.pth` processing failed, not the spaces.
+
+So the real fix is to recreate a clean venv, which also proves the standard documented flow works for evaluators. Let me do that.
+
+Clean venv created. Now the real test — does the standard flow work *without* any manual patching?
+
+The clean install works perfectly with zero manual patching — and notably the path *still contains spaces* (`Tavily Take home`), yet it imports fine. That definitively rules out spaces as the cause and confirms it was the corrupted iCloud-synced venv.
+
+This means my earlier runbook troubleshooting entry is actually **wrong** — I blamed spaces. Let me correct it to reflect the real cause and fix.
+
+Done. Here's the honest picture of what was real vs. what was a local artifact:
+
+## What was actually wrong (and the durable fixes)
+
+**1. The `ModuleNotFoundError` was NOT a code/packaging bug.** It was a corrupted `.venv` on this machine — the `competitive-intel 2`, `pip3 2`, `uv 2`, `_editable_impl_..._2.pth` files are macOS/iCloud sync duplicates. A venv can't be copied or synced (its absolute paths and editable-install finder break). My earlier "spaces in the path" explanation was wrong; the path *still* has spaces and the clean install works fine.
+
+- **Durable fix:** `rm -rf .venv && uv sync` → clean venv, no manual patching, console script and `python -m` both work. I verified this end to end.
+- **Why evaluators won't hit it:** `.venv/` is gitignored, so the corrupted venv never leaves your machine. An evaluator clones and runs `uv sync` against a fresh venv — exactly what I just reproduced successfully.
+- I **threw away the hand-patched console script** (the whole `.venv` was recreated), so there's no fragile hack left in the repo.
+
+**2. The 0-sources bug WAS a real code bug, and the fix is committed in source.** `topic="finance"` was hardcoded in `tavily_tools.py`; it now selects `"finance"` only for `financials`/`funding` and `"general"` otherwise. That lives in `src/`, so every evaluator gets it.
+
+## Doc corrections
+I fixed the runbook entry I'd gotten wrong — it no longer blames spaces. It now correctly tells users a `ModuleNotFoundError` means a copied/synced venv and to recreate it with `rm -rf .venv && uv sync`, with `PYTHONPATH=src` only as a last-resort escape hatch.
+
+One practical recommendation for your own peace of mind during evaluation: this project lives under `~/Documents`, which iCloud actively syncs. Consider moving it somewhere unsynced (e.g. `~/code/`) so iCloud can't re-corrupt the venv mid-demo. Want me to verify the brief actually produces sources now with a live run, or check that the test suite passes against the clean venv?
+
+---
+
+## Summary
+
+The implementation was completed at this point. Subsequent work in the same session included additional improvements committed to the repo: concurrent per-category retrieval (ThreadPoolExecutor), OTel context propagation into worker threads for proper Logfire trace nesting, force-flush of traces at CLI exit, provider-aware structured output (json\_schema for OpenAI), removal of the cached Settings singleton mutation, and debug-level logging for optional instrumentation failures. See the git log for the full change history.
