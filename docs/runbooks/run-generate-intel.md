@@ -63,28 +63,32 @@ The module form is always equivalent if you prefer it:
 
 ## Options
 
-| Option | Values | Default |
-|---|---|---|
-| `COMPANY` (positional, required) | any company name | — |
-| `--focus` | comma-separated: `funding,financials,product,pricing,hiring,partnerships,market_positioning,risk` | all |
-| `--window` | `day` `week` `month` `year` | `month` |
-| `--provider` | `anthropic` `openai` | from env |
-| `--out` | file path | print to stdout |
+
+| Option                           | Values                                                                                            | Default         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------- | --------------- |
+| `COMPANY` (positional, required) | any company name                                                                                  | —               |
+| `--focus`                        | comma-separated: `funding,financials,product,pricing,hiring,partnerships,market_positioning,risk` | all             |
+| `--window`                       | `day` `week` `month` `year`                                                                       | `month`         |
+| `--provider`                     | `anthropic` `openai`                                                                              | from env        |
+| `--out`                          | file path                                                                                         | print to stdout |
+
 
 ## What you get
 
-A markdown brief (see [`examples/sample_brief.md`](../../examples/sample_brief.md)) plus a run-summary panel: provider/model, sources cited, findings kept/dropped, **citation coverage %**, self-correction retries, duration, and token usage.
+A markdown brief (see `[examples/sample_brief.md](../../examples/sample_brief.md)`) plus a run-summary panel: provider/model, sources cited, findings kept/dropped, **citation coverage %**, self-correction retries, duration, and token usage.
 
 ## Troubleshooting
 
-| Symptom | Cause / fix |
-|---|---|
-| `Missing TAVILY_API_KEY` | Set it in `.env`. |
-| `No model provider key found` | Set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`. |
+
+| Symptom                                                    | Cause / fix                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Missing TAVILY_API_KEY`                                   | Set it in `.env`.                                                                                                                                                                                                                                                                                          |
+| `No model provider key found`                              | Set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`.                                                                                                                                                                                                                                                               |
 | `ModuleNotFoundError: No module named 'competitive_intel'` | The `.venv` is corrupted — usually from being copied or synced (e.g. iCloud/Dropbox sync a venv living under `~/Documents`). Venvs are not relocatable. Recreate it: `rm -rf .venv && uv sync`. As a one-off escape hatch you can also run `PYTHONPATH=src .venv/bin/python -m competitive_intel brief …`. |
-| 0 sources, "evidence does not mention X" | Run summary shows sources=0 but the brief ran. Try `--window year` or run without `--focus` to let all categories attempt retrieval. |
-| Few/zero findings | The window may be too narrow — try `--window year`; low-evidence categories already auto-retry once. |
-| Low coverage % | Verification dropped findings with unresolvable citations — that's the safety net working. |
+| 0 sources, "evidence does not mention X"                   | Run summary shows sources=0 but the brief ran. Try `--window year` or run without `--focus` to let all categories attempt retrieval.                                                                                                                                                                       |
+| Few/zero findings                                          | The window may be too narrow — try `--window year`; low-evidence categories already auto-retry once.                                                                                                                                                                                                       |
+| Low coverage %                                             | Verification dropped findings with unresolvable citations — that's the safety net working.                                                                                                                                                                                                                 |
+
 
 ---
 
@@ -92,7 +96,7 @@ A markdown brief (see [`examples/sample_brief.md`](../../examples/sample_brief.m
 
 ## Enable tracing
 
-Set `LOGFIRE_TOKEN` in `.env` (get one at <https://logfire.pydantic.dev>). Without it, tracing is a silent no-op and the CLI still works.
+Set `LOGFIRE_TOKEN` in `.env` (get one at [https://logfire.pydantic.dev](https://logfire.pydantic.dev)). Without it, tracing is a silent no-op and the CLI still works.
 
 Configuration happens once in `observability.py`:
 
@@ -143,7 +147,8 @@ def log_model(message: str, model: BaseModel) -> None:
 
 ## What to look for (demo)
 
-- **`retrieval` events** — `max_fused_score` and `retried=true` show the self-correction loop firing on thin categories.
-- **`synthesize` span** — the single grounded model call and its token usage.
-- **`run_summary`** — `citation_coverage` and `n_dropped` prove the verification gate ran.
+- `**retrieval` events** — `max_fused_score` and `retried=true` show the self-correction loop firing on thin categories.
+- `**synthesize` span** — the single grounded model call and its token usage.
+- `**run_summary`** — `citation_coverage` and `n_dropped` prove the verification gate ran.
 - **Tavily HTTP spans** — concrete evidence the brief used live web data.
+

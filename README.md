@@ -16,16 +16,6 @@ The starter agent does one untuned web search and writes a paragraph. This does 
 
 Result: recent, ranked, cited, and auditable — the three things plain LLMs cannot give a diligence team.
 
-## Quickstart
-
-```bash
-cp .env.template .env                    # add TAVILY_API_KEY + ANTHROPIC_API_KEY (or OPENAI_API_KEY)
-uv sync                                  # creates .venv and installs deps
-source .venv/bin/activate                # Windows: .venv\Scripts\activate
-competitive-intel brief "Anthropic" --focus funding,product,hiring --window month
-competitive-intel eval --cases eval/cases.yaml
-```
-
 ## Deliverables
 
 | Deliverable | Location |
@@ -35,6 +25,18 @@ competitive-intel eval --cases eval/cases.yaml
 | **Build record** — coding agent session log (Cursor) | [`docs/explainer/explainer-coding-agent-summary.md`](docs/explainer/explainer-coding-agent-summary.md) |
 | **Build log** — what was built and why, in plain language | [`docs/explainer/explainer-build-log.md`](docs/explainer/explainer-build-log.md) |
 | **Sample output** — example brief for Perplexity | [`examples/sample_brief.md`](examples/sample_brief.md) |
+
+## Quickstart
+
+Requires `TAVILY_API_KEY` + `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`. See [`docs/runbooks/run-generate-intel.md`](docs/runbooks/run-generate-intel.md) for where to get them.
+
+```bash
+cp .env.template .env                    # fill in your API keys
+uv sync                                  # creates .venv and installs deps
+source .venv/bin/activate                # Windows: .venv\Scripts\activate
+competitive-intel brief "Anthropic" --focus funding,product,hiring --window month
+competitive-intel eval --cases eval/cases.yaml
+```
 
 ## Learn more
 
