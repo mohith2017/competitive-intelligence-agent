@@ -58,15 +58,15 @@ Every run produces a full OpenTelemetry trace in Logfire showing retrieval, rera
 
 The full span tree: `brief → retrieve_rerank → retrieve (×N) → tavily_search / tavily_extract → ledger → synthesize → verify → run_summary`
 
-Logfire trace — tree with timing
+<img src="docs/assets/logfire-trace-tree.png" alt="Logfire trace tree with timing" width="900"/>
 
 The `synthesize` span shows the LangChain `RunnableParallel` internals and the parsed `DraftBrief` with every structured finding and citation:
 
-Logfire trace — synthesize span with parsed DraftBrief
+<img src="docs/assets/logfire-synthesis-detail.png" alt="Logfire synthesize span with parsed DraftBrief" width="900"/>
 
 The `tavily_extract` span shows the raw full-page content fetched from each URL before reranking:
 
-Logfire trace — tavily_extract span with raw content
+<img src="docs/assets/logfire-extract-detail.png" alt="Logfire tavily_extract span with raw content" width="900"/>
 
 ## Deliverables
 
