@@ -26,13 +26,19 @@ competitive-intel brief "Anthropic" --focus funding,product,hiring --window mont
 competitive-intel eval --cases eval/cases.yaml
 ```
 
+## Deliverables
+
+| Deliverable | Location |
+|---|---|
+| **Technical statement** — approach, thought process, and business value | [`docs/technical-statement.md`](docs/technical-statement.md) |
+| **Explainer** — deep-dive on Evidence Fusion, grounded synthesis, observability, and context isolation | [`docs/explainer/explainer-summary.md`](docs/explainer/explainer-summary.md) |
+| **Build record** — coding agent session log (Cursor) | [`docs/explainer/explainer-coding-agent-summary.md`](docs/explainer/explainer-coding-agent-summary.md) |
+| **Build log** — what was built and why, in plain language | [`docs/explainer/explainer-build-log.md`](docs/explainer/explainer-build-log.md) |
+| **Sample output** — example brief for Perplexity | [`examples/sample_brief.md`](examples/sample_brief.md) |
+
 ## Learn more
 
-- Approach, audience, and value: [`docs/technical-statement.md`](docs/technical-statement.md)
-- Architecture + module map: [`docs/explainer/explainer-summary.md`](docs/explainer/explainer-summary.md#architecture)
-- Runbooks (run a brief, read traces, run evals): [`docs/runbooks/`](docs/runbooks)
-- The explainer (deep-research context engineering): [`docs/explainer/`](docs/explainer)
-- How this was built: [`docs/explainer/explainer-build-log.md`](docs/explainer/explainer-build-log.md)
-- Sample output: [`examples/sample_brief.md`](examples/sample_brief.md)
+- Architecture + module map: [`docs/explainer/explainer-summary.md#architecture`](docs/explainer/explainer-summary.md#architecture)
+- Runbooks (generate a brief, read traces, run evals): [`docs/runbooks/`](docs/runbooks)
 
 Requires Python 3.11+.
