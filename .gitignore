@@ -1,0 +1,23 @@
+# Environments
+.env
+.venv/
+.uv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# OS / editor
+.DS_Store
+
+# Build
+dist/
+build/
+
+# Generated briefs
+out/
+*.brief.md

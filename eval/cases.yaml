@@ -1,0 +1,11 @@
+# Golden cases for the deterministic evaluation suite.
+cases:
+  - company: Perplexity
+    focus: [funding, product, pricing]
+    window: month
+  - company: Anthropic
+    focus: [funding, product, hiring]
+    window: month
+  - company: Mistral AI
+    focus: [funding, partnerships, market_positioning]
+    window: year
