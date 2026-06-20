@@ -15,6 +15,7 @@ With `uv` (recommended):
 
 ```bash
 uv sync
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 ```
 
 Or with plain pip:

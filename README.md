@@ -19,8 +19,9 @@ Result: recent, ranked, cited, and auditable — the three things plain LLMs can
 ## Quickstart
 
 ```bash
-cp .env.template .env          # add TAVILY_API_KEY + ANTHROPIC_API_KEY (or OPENAI_API_KEY)
-uv sync                        # or: pip install -e .
+cp .env.template .env                    # add TAVILY_API_KEY + ANTHROPIC_API_KEY (or OPENAI_API_KEY)
+uv sync                                  # creates .venv and installs deps
+source .venv/bin/activate                # Windows: .venv\Scripts\activate
 competitive-intel brief "Anthropic" --focus funding,product,hiring --window month
 competitive-intel eval --cases eval/cases.yaml
 ```
