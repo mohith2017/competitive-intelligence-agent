@@ -30,6 +30,8 @@ Result: recent, ranked, cited, and auditable — the three things plain LLMs can
 
 Requires `TAVILY_API_KEY` + `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`. See [`docs/runbooks/run-generate-intel.md`](docs/runbooks/run-generate-intel.md) for where to get them.
 
+For Logfire observability/tracing setup: [`docs/runbooks/run-generate-intel.md#enable-tracing`](docs/runbooks/run-generate-intel.md#enable-tracing)
+
 ```bash
 cp .env.template .env                    # fill in your API keys
 uv sync                                  # creates .venv and installs deps
@@ -42,5 +44,6 @@ competitive-intel eval --cases eval/cases.yaml
 
 - Architecture + module map: [`docs/explainer/explainer-summary.md#architecture`](docs/explainer/explainer-summary.md#architecture)
 - Runbooks (generate a brief, read traces, run evals): [`docs/runbooks/`](docs/runbooks)
+
 
 Requires Python 3.11+.

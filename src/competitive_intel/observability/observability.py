@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 from contextlib import contextmanager
 from typing import Any
 
 from pydantic import BaseModel
 
 from ..config import Settings, get_settings
+
+_log = logging.getLogger(__name__)
 
 try:
     import logfire as _logfire_module
@@ -39,7 +42,9 @@ def configure(settings: Settings | None = None) -> bool:
         token=settings.logfire_token,
         send_to_logfire="if-token-present",
         service_name="competitive-intel",
-        console=False,
+        # Off by default to keep CLI output clean; set LOGFIRE_CONSOLE=1 to
+        # also print spans to the terminal when debugging tracing.
+        console=None if settings.logfire_console else False,
     )
     _logfire = _logfire_module
 
@@ -47,13 +52,13 @@ def configure(settings: Settings | None = None) -> bool:
         try:
             LangChainInstrumentor().instrument()
         except Exception:
-            pass
+            _log.debug("LangChain instrumentation failed to initialize", exc_info=True)
 
     for instrument in ("instrument_httpx", "instrument_requests"):
         try:
             getattr(_logfire, instrument)()
         except Exception:
-            pass
+            _log.debug("logfire.%s() failed to initialize", instrument, exc_info=True)
 
     return True
 

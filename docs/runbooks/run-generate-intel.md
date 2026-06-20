@@ -96,7 +96,33 @@ A markdown brief (see `[examples/sample_brief.md](../../examples/sample_brief.md
 
 ## Enable tracing
 
-Set `LOGFIRE_TOKEN` in `.env` (get one at [https://logfire.pydantic.dev](https://logfire.pydantic.dev)). Without it, tracing is a silent no-op and the CLI still works.
+Tracing is **opt-in**: without a `LOGFIRE_TOKEN` it is a silent no-op and the CLI still works. To see traces you need a Logfire project and a **write token** for it.
+
+**1. Create an account and a project**
+
+- Sign up at [logfire.pydantic.dev](https://logfire.pydantic.dev).
+- Create a new project (e.g. name it `competitive-intel`). The project is where traces land — the project name is set in the Logfire UI, not in this app.
+
+**2. Create a write token for that project**
+
+- In the project, go to **Settings → Write tokens → Create write token**.
+- Copy the token (starts with `pylf_v1_...`).
+
+**3. Put the token in `.env`**
+
+```
+LOGFIRE_TOKEN="pylf_v1_..."
+```
+
+**4. Run a brief, then open the project in the Logfire UI**
+
+```bash
+competitive-intel brief "Perplexity" --focus funding,product --window month
+```
+
+The token alone determines which project receives the data — there is no project name to configure in code. The app sets the OpenTelemetry **service name** to `competitive-intel` (visible as a `service.name` attribute on every span), which is independent of your Logfire project name.
+
+> **Not seeing logs?** Check, in order: (1) `LOGFIRE_TOKEN` is actually set in `.env` and the shell/venv was reloaded after editing it; (2) the token is a **write** token (not a read token) for the project you're viewing; (3) you're looking at the right project in the UI; (4) the run completed without erroring before synthesis. You can confirm the token is being picked up by setting `LOGFIRE_CONSOLE=1` to also print spans to the terminal.
 
 Configuration happens once in `observability.py`:
 

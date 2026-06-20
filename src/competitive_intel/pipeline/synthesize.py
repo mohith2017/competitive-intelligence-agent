@@ -50,8 +50,9 @@ def synthesize(
         return SynthesisResult(draft=DraftBrief(executive_summary="", findings=[]))
 
     model = model or build_model(settings)
+    method = "json_schema" if settings.resolve_provider() == "openai" else "function_calling"
     structured = model.with_structured_output(
-        DraftBrief, method="function_calling", include_raw=True
+        DraftBrief, method=method, include_raw=True
     )
 
     human = (

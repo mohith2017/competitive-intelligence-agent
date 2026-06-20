@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = None
     openai_api_key: str | None = None
     logfire_token: str | None = None
+    logfire_console: bool = False
 
     provider: Provider = Field(
         default="anthropic",
@@ -52,6 +53,7 @@ class Settings(BaseSettings):
     passage_char_cap: int = 1200
     rrf_k: int = 60
     min_fused_score: float = 0.02
+    max_retrieval_workers: int = 8
 
     @property
     def default_categories(self) -> list[Category]:

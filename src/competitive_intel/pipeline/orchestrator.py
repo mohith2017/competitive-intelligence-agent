@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
 from ..config import Settings, get_settings
@@ -98,11 +99,20 @@ def run_brief(
         retries = 0
 
         with span("retrieve_rerank", n_plan_items=len(plan)):
-            for category in focus_areas:
+
+            def _work(category: Category) -> tuple[list[Passage], RetrievalSpanMeta]:
                 items = [p for p in plan if p.category == category]
-                passages, meta = _retrieve_and_rank_category(
+                return _retrieve_and_rank_category(
                     category, items, retriever, settings, company, recency_window
                 )
+            if len(focus_areas) > 1:
+                max_workers = min(len(focus_areas), settings.max_retrieval_workers)
+                with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                    results = list(pool.map(_work, focus_areas))
+            else:
+                results = [_work(category) for category in focus_areas]
+
+            for category, (passages, meta) in zip(focus_areas, results):
                 passages_by_category[category] = passages
                 metas.append(meta)
                 if meta.retried:

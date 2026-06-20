@@ -75,7 +75,7 @@ def brief(
     """Generate a competitive intelligence brief for COMPANY."""
     settings = get_settings()
     if provider:
-        settings.provider = provider
+        settings = settings.model_copy(update={"provider": provider})
     focus_areas = _parse_focus(focus, settings.default_categories)
     window = recency_window or settings.default_recency_window
 
