@@ -22,6 +22,11 @@ try:
 except Exception:
     LangChainInstrumentor = None 
 
+try:
+    from opentelemetry import context as _otel_context
+except ImportError:
+    _otel_context = None
+
 _CONFIGURED = False
 _logfire: Any = None
 
@@ -73,7 +78,37 @@ def span(name: str, **attributes: Any):
         yield None
 
 
+def current_context() -> Any:
+    """Capture the active OTel context so it can be re-attached in a thread."""
+    if _otel_context is not None:
+        return _otel_context.get_current()
+    return None
+
+
+@contextmanager
+def use_context(ctx: Any):
+    """
+    Re-attach a captured OTel context (e.g. inside a worker thread).
+    """
+    if _otel_context is not None and ctx is not None:
+        token = _otel_context.attach(ctx)
+        try:
+            yield
+        finally:
+            _otel_context.detach(token)
+    else:
+        yield
+
+
 def log_model(message: str, model: BaseModel) -> None:
     """Log a typed pipeline artifact as structured attributes."""
     if _logfire is not None:
         _logfire.info(message, **model.model_dump())
+
+
+def flush() -> None:
+    if _logfire is not None:
+        try:
+            _logfire.force_flush()
+        except Exception:
+            _log.debug("logfire.force_flush() failed", exc_info=True)

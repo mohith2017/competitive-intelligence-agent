@@ -14,7 +14,14 @@ from ..models import (
     RunSummary,
     SearchResult,
 )
-from ..observability import configure, log_model, span
+from ..observability import (
+    configure,
+    current_context,
+    flush,
+    log_model,
+    span,
+    use_context,
+)
 from .synthesize import synthesize
 from ..tools import TavilyRetriever
 from .verify import verify
@@ -99,12 +106,14 @@ def run_brief(
         retries = 0
 
         with span("retrieve_rerank", n_plan_items=len(plan)):
+            parent_ctx = current_context()
 
             def _work(category: Category) -> tuple[list[Passage], RetrievalSpanMeta]:
                 items = [p for p in plan if p.category == category]
-                return _retrieve_and_rank_category(
-                    category, items, retriever, settings, company, recency_window
-                )
+                with use_context(parent_ctx), span("retrieve", category=category):
+                    return _retrieve_and_rank_category(
+                        category, items, retriever, settings, company, recency_window
+                    )
             if len(focus_areas) > 1:
                 max_workers = min(len(focus_areas), settings.max_retrieval_workers)
                 with ThreadPoolExecutor(max_workers=max_workers) as pool:
@@ -160,4 +169,5 @@ def run_brief(
         )
         log_model("run_summary", summary)
 
+    flush()
     return brief, summary

@@ -41,7 +41,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("CI_ANTHROPIC_MODEL", "anthropic_model"),
     )
     openai_model: str = Field(
-        default="gpt-4o",
+        default="gpt-5.5",
         validation_alias=AliasChoices("CI_OPENAI_MODEL", "openai_model"),
     )
     temperature: float = 0.0
